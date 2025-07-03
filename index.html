@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Daily Muhurat (India)</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 2rem;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 0.5rem;
+      font-size: 2rem;
+    }
+
+    .time {
+      text-align: center;
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+    }
+
+    .current-muhurat {
+      max-width: 600px;
+      margin: 1rem auto 2rem;
+      padding: 1rem;
+      background: linear-gradient(135deg, #e0ffe0, #d0f0ff);
+      border-left: 6px solid #00aa55;
+      box-shadow: 0 0 12px rgba(0, 170, 85, 0.3);
+      border-radius: 12px;
+      text-align: center;
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: #034d18;
+      position: relative;
+      animation: pulse 2s infinite;
+    }
+
+    .current-muhurat::before {
+      content: "🔔";
+      font-size: 1.5rem;
+      position: absolute;
+      left: 1rem;
+      top: 1rem;
+    }
+
+    @keyframes pulse {
+      0% { box-shadow: 0 0 8px rgba(0, 170, 85, 0.3); }
+      50% { box-shadow: 0 0 20px rgba(0, 170, 85, 0.5); }
+      100% { box-shadow: 0 0 8px rgba(0, 170, 85, 0.3); }
+    }
+
+    .muhurats {
+      max-width: 700px;
+      margin: auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .muhurat {
+      background-color: #fff;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.1);
+      transition: background-color 0.3s;
+      white-space: pre-line;
+    }
+
+    .active {
+      background-color: #d4f0d4;
+      font-weight: bold;
+      border-left: 5px solid green;
+    }
+  </style>
+</head>
+<body>
+  <h1>🕉️ 30 Daily Muhurats (IST)</h1>
+  <div class="time" id="currentTime">Loading current time...</div>
+  <div class="current-muhurat" id="currentMuhurat">Detecting current muhurat...</div>
+  <div class="muhurats" id="muhuratsList"></div>
+
+  <script>
+    const MUHURAT_DURATION_MS = 48 * 60 * 1000;
+
+    const muhuratNames = [
+      "Rudra", "Ahi", "Mitra", "Pitamaha", "Vasishtha",
+      "Saptama", "Surya", "Chandra", "Mangala", "Shani",
+      "Brihaspati", "Rahu", "Ketu", "Kubera", "Kala",
+      "Yama", "Varuna", "Indra", "Vayu", "Soma",
+      "Bhagha", "Aryama", "Savita", "Vishnu", "Asha",
+      "Pushan", "Anila", "Prajapati", "Parjanya", "Vishwadeva"
+    ];
+
+    function getISTTime() {
+      const now = new Date();
+      const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+      const ist = new Date(utc + (5.5 * 60 * 60 * 1000));
+      return ist;
+    }
+
+    function formatTime(date) {
+      return date.toTimeString().substring(0, 5);
+    }
+
+    function generateMuhuratTimes() {
+      const today = getISTTime();
+      today.setHours(0, 0, 0, 0);
+
+      const muhurats = [];
+      for (let i = 0; i < 30; i++) {
+        const start = new Date(today.getTime() + i * MUHURAT_DURATION_MS);
+        const end = new Date(start.getTime() + MUHURAT_DURATION_MS);
+        muhurats.push({
+          index: i + 1,
+          name: muhuratNames[i],
+          startTime: formatTime(start),
+          endTime: formatTime(end),
+          startMs: start.getTime(),
+          endMs: end.getTime()
+        });
+      }
+      return muhurats;
+    }
+
+    function updateUI() {
+      const current = getISTTime();
+      document.getElementById("currentTime").innerText =
+        `Current IST Time: ${formatTime(current)}`;
+
+      const muhurats = generateMuhuratTimes();
+      const container = document.getElementById("muhuratsList");
+      const currentDisplay = document.getElementById("currentMuhurat");
+      container.innerHTML = "";
+
+      let currentFound = false;
+
+      muhurats.forEach((muhurat) => {
+        const div = document.createElement("div");
+        div.className = "muhurat";
+        const isActive = current.getTime() >= muhurat.startMs && current.getTime() < muhurat.endMs;
+        if (isActive) {
+          div.classList.add("active");
+          currentDisplay.innerHTML = `🔔 <strong>Current Muhurat:</strong><br> ${muhurat.index}. ${muhurat.name} (${muhurat.startTime} - ${muhurat.endTime})`;
+          currentFound = true;
+        }
+
+        div.innerText = `${muhurat.index}. ${muhurat.name}\n${muhurat.startTime} - ${muhurat.endTime}`;
+        container.appendChild(div);
+      });
+
+      if (!currentFound) {
+        currentDisplay.innerHTML = `<strong>No active Muhurat found (day transition)</strong>`;
+      }
+    }
+
+    updateUI();
+    setInterval(updateUI, 10000);
+  </script>
+</body>
+</html>
